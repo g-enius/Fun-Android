@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -27,8 +28,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.content.Intent
 import com.funapp.android.platform.ui.components.ErrorView
 import com.funapp.android.platform.ui.components.FavoriteButton
 import com.funapp.android.platform.ui.components.LoadingIndicator
@@ -70,6 +73,8 @@ internal fun DetailContent(
     onRefresh: () -> Unit,
     onFavoriteToggle: () -> Unit
 ) {
+    val context = LocalContext.current
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -84,6 +89,18 @@ internal fun DetailContent(
                 },
                 actions = {
                     state.item?.let { item ->
+                        IconButton(onClick = {
+                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                putExtra(Intent.EXTRA_TEXT, "Check out ${item.title}!")
+                                type = "text/plain"
+                            }
+                            context.startActivity(Intent.createChooser(sendIntent, null))
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "Share"
+                            )
+                        }
                         FavoriteButton(
                             isFavorite = item.isFavorite,
                             onClick = onFavoriteToggle
