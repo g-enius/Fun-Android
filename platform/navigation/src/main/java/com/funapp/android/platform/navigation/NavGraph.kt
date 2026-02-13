@@ -34,24 +34,30 @@ fun AppNavigation(
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
     LaunchedEffect(deepLink) {
+        if (deepLink == null) return@LaunchedEffect
+
+        // If still on login, auto-navigate to main first
+        val currentRoute = navController.currentBackStackEntry?.destination?.route
+        if (currentRoute == "login") {
+            navController.navigate("main") {
+                popUpTo("login") { inclusive = true }
+            }
+        } else {
+            navController.popBackStack("main", inclusive = false)
+        }
+
         when (deepLink) {
             is DeepLink.SwitchTab -> {
-                navController.popBackStack("main", inclusive = false)
                 selectedTab = deepLink.tabIndex
-                onDeepLinkHandled()
             }
             is DeepLink.ItemDetail -> {
-                navController.popBackStack("main", inclusive = false)
                 navController.navigate("detail/${deepLink.itemId}")
-                onDeepLinkHandled()
             }
             is DeepLink.Profile -> {
-                navController.popBackStack("main", inclusive = false)
                 navController.navigate("profile")
-                onDeepLinkHandled()
             }
-            null -> {}
         }
+        onDeepLinkHandled()
     }
 
     NavHost(navController = navController, startDestination = "login") {
