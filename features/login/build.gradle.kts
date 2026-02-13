@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.funapp.android.platform.navigation"
+    namespace = "com.funapp.android.features.login"
     compileSdk = 35
 
     defaultConfig {
@@ -27,23 +27,11 @@ android {
 }
 
 dependencies {
-    implementation(project(":model"))
     implementation(project(":platform:ui-components"))
-    implementation(project(":services:network"))
-    implementation(project(":services:favorites"))
-    implementation(project(":services:search"))
-    implementation(project(":features:login"))
-    implementation(project(":features:home"))
-    implementation(project(":features:search"))
-    implementation(project(":features:items"))
-    implementation(project(":features:profile"))
-    implementation(project(":features:profile-detail"))
-    implementation(project(":features:detail"))
-    implementation(project(":features:settings"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime)
-    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)

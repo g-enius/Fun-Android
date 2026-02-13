@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.funapp.android.features.detail.DetailScreen
+import com.funapp.android.features.login.LoginScreen
 import com.funapp.android.features.profile.ProfileScreen
 import com.funapp.android.features.profiledetail.ProfileDetailScreen
 import com.funapp.android.model.DeepLink
@@ -53,7 +54,17 @@ fun AppNavigation(
         }
     }
 
-    NavHost(navController = navController, startDestination = "main") {
+    NavHost(navController = navController, startDestination = "login") {
+        composable("login") {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate("main") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
+            )
+        }
+
         composable("main") {
             MainTabScreen(
                 networkService = networkService,
@@ -92,7 +103,9 @@ fun AppNavigation(
                     navController.popBackStack()
                 },
                 onLogout = {
-                    navController.popBackStack()
+                    navController.navigate("login") {
+                        popUpTo("main") { inclusive = true }
+                    }
                 }
             )
         }
