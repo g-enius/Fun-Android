@@ -4,6 +4,10 @@ import com.funapp.android.model.Item
 
 data class ItemsState(
     val isLoading: Boolean = false,
-    val items: List<Item> = emptyList(),
+    val allItems: List<Item> = emptyList(),
+    val filteredItems: List<Item> = emptyList(),
+    val query: String = "",
+    val selectedCategory: String? = null,
+    val allCategories: List<String> = emptyList(),
     val error: String? = null
 )

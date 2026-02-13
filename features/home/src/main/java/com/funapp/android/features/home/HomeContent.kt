@@ -1,37 +1,47 @@
 package com.funapp.android.features.home
 
-import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.funapp.android.model.Item
 import com.funapp.android.platform.ui.components.ErrorView
 import com.funapp.android.platform.ui.components.FavoriteButton
 import com.funapp.android.platform.ui.components.LoadingIndicator
-import com.funapp.android.platform.ui.theme.FunTheme
+import com.funapp.android.platform.ui.theme.itemColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,15 +49,26 @@ internal fun HomeContent(
     state: HomeState,
     onRefresh: () -> Unit,
     onItemClick: (String) -> Unit,
-    onFavoriteToggle: (String) -> Unit
+    onFavoriteToggle: (String) -> Unit,
+    onProfileClick: () -> Unit
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Home") })
+            TopAppBar(
+                title = { Text("Home") },
+                actions = {
+                    IconButton(onClick = onProfileClick) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile"
+                        )
+                    }
+                }
+            )
         }
     ) { padding ->
         when {
-            state.isLoading && state.items.isEmpty() -> {
+            state.isLoading && state.carouselPages.isEmpty() -> {
                 LoadingIndicator(modifier = Modifier.padding(padding))
             }
             state.error != null -> {
@@ -58,18 +79,16 @@ internal fun HomeContent(
                 )
             }
             else -> {
-                LazyColumn(
-                    modifier = Modifier.padding(padding),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                PullToRefreshBox(
+                    isRefreshing = state.isLoading,
+                    onRefresh = onRefresh,
+                    modifier = Modifier.padding(padding)
                 ) {
-                    items(state.items, key = { it.id }) { item ->
-                        ItemCard(
-                            item = item,
-                            onItemClick = { onItemClick(item.id) },
-                            onFavoriteToggle = { onFavoriteToggle(item.id) }
-                        )
-                    }
+                    CarouselContent(
+                        pages = state.carouselPages,
+                        onItemClick = onItemClick,
+                        onFavoriteToggle = onFavoriteToggle
+                    )
                 }
             }
         }
@@ -77,87 +96,122 @@ internal fun HomeContent(
 }
 
 @Composable
-private fun ItemCard(
+private fun CarouselContent(
+    pages: List<List<Item>>,
+    onItemClick: (String) -> Unit,
+    onFavoriteToggle: (String) -> Unit
+) {
+    if (pages.isEmpty()) return
+
+    val pagerState = rememberPagerState(pageCount = { pages.size })
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        HorizontalPager(
+            state = pagerState,
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            pageSpacing = 12.dp,
+            modifier = Modifier.weight(1f)
+        ) { pageIndex ->
+            val pageItems = pages[pageIndex]
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 8.dp)
+            ) {
+                pageItems.forEach { item ->
+                    CarouselCard(
+                        item = item,
+                        onItemClick = { onItemClick(item.id) },
+                        onFavoriteToggle = { onFavoriteToggle(item.id) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                // Fill space if only 1 item on last page
+                if (pageItems.size < 2) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+
+        // Page indicator dots
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(bottom = 16.dp)
+        ) {
+            repeat(pages.size) { index ->
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (index == pagerState.currentPage)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                Color.LightGray
+                        )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CarouselCard(
     item: Item,
     onItemClick: () -> Unit,
-    onFavoriteToggle: () -> Unit
+    onFavoriteToggle: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
+    val bgColor = itemColor(item.iconColor)
+
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onItemClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(8.dp)
+        colors = CardDefaults.cardColors(containerColor = bgColor),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = item.title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (item.subtitle.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = item.subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.85f),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.End
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = item.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    if (item.category.isNotEmpty()) {
-                        Text(
-                            text = item.category,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
                 FavoriteButton(
                     isFavorite = item.isFavorite,
                     onClick = onFavoriteToggle
                 )
             }
-            if (item.description.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = item.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun HomeContentPreview() {
-    FunTheme {
-        HomeContent(
-            state = HomeState(
-                items = listOf(
-                    Item("1", "Sample Item 1", "Description 1", category = "Category A", isFavorite = true),
-                    Item("2", "Sample Item 2", "Description 2", category = "Category B")
-                )
-            ),
-            onRefresh = {},
-            onItemClick = {},
-            onFavoriteToggle = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun HomeContentDarkPreview() {
-    FunTheme(darkTheme = true) {
-        HomeContent(
-            state = HomeState(
-                items = listOf(
-                    Item("1", "Sample Item 1", "Description 1", category = "Category A", isFavorite = true),
-                    Item("2", "Sample Item 2", "Description 2", category = "Category B")
-                )
-            ),
-            onRefresh = {},
-            onItemClick = {},
-            onFavoriteToggle = {}
-        )
     }
 }

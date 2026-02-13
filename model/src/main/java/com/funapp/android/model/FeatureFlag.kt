@@ -1,7 +1,6 @@
 package com.funapp.android.model
 
 enum class FeatureFlag(val key: String, val defaultEnabled: Boolean = true) {
-    ENABLE_SEARCH("enable_search"),
-    ENABLE_FAVORITES("enable_favorites"),
-    ENABLE_PROFILE_EDITING("enable_profile_editing", defaultEnabled = false)
+    FEATURED_CAROUSEL("featured_carousel"),
+    SIMULATE_ERRORS("simulate_errors", defaultEnabled = false)
 }

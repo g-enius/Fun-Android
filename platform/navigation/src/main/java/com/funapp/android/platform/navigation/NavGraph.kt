@@ -29,8 +29,8 @@ fun AppNavigation(
                 onNavigateToDetail = { itemId ->
                     navController.navigate("detail/$itemId")
                 },
-                onNavigateToProfile = { userId ->
-                    navController.navigate("profile/$userId")
+                onNavigateToProfile = {
+                    navController.navigate("profile/current_user")
                 }
             )
         }
@@ -39,7 +39,7 @@ fun AppNavigation(
             route = "detail/{itemId}",
             arguments = listOf(navArgument("itemId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val itemId = backStackEntry.arguments?.getString("itemId")!!
+            val itemId = backStackEntry.arguments?.getString("itemId") ?: return@composable
             DetailScreen(
                 itemId = itemId,
                 networkService = networkService,
@@ -52,7 +52,7 @@ fun AppNavigation(
             route = "profile/{userId}",
             arguments = listOf(navArgument("userId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId")!!
+            val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
             ProfileDetailScreen(
                 userId = userId,
                 networkService = networkService,

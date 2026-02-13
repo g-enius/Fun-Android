@@ -2,11 +2,13 @@ package com.funapp.android.features.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.funapp.android.model.Item
 import com.funapp.android.services.favorites.FavoritesService
 import com.funapp.android.services.network.NetworkService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
@@ -17,6 +19,8 @@ class HomeViewModel(
     private val _state = MutableStateFlow(HomeState(isLoading = true))
     val state: StateFlow<HomeState> = _state.asStateFlow()
 
+    private var allItems: List<Item> = emptyList()
+
     init {
         loadData()
         observeFavorites()
@@ -24,19 +28,24 @@ class HomeViewModel(
 
     private fun loadData() {
         viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true, error = null)
+            _state.update { it.copy(isLoading = true, error = null) }
             networkService.fetchHomeData()
                 .onSuccess { data ->
-                    _state.value = _state.value.copy(
-                        isLoading = false,
-                        items = data
-                    )
+                    allItems = data
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            carouselPages = data.chunked(2)
+                        )
+                    }
                 }
                 .onFailure { error ->
-                    _state.value = _state.value.copy(
-                        isLoading = false,
-                        error = error.message ?: "Unknown error"
-                    )
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            error = error.message ?: "Unknown error"
+                        )
+                    }
                 }
         }
     }
@@ -44,11 +53,15 @@ class HomeViewModel(
     private fun observeFavorites() {
         viewModelScope.launch {
             favoritesService.getFavorites().collect { favorites ->
-                _state.value = _state.value.copy(
-                    items = _state.value.items.map { item ->
-                        item.copy(isFavorite = favorites.contains(item.id))
-                    }
-                )
+                _state.update { current ->
+                    current.copy(
+                        carouselPages = current.carouselPages.map { page ->
+                            page.map { item ->
+                                item.copy(isFavorite = favorites.contains(item.id))
+                            }
+                        }
+                    )
+                }
             }
         }
     }

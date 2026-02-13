@@ -12,7 +12,8 @@ import com.funapp.android.services.network.NetworkService
 fun HomeScreen(
     networkService: NetworkService,
     favoritesService: FavoritesService,
-    onNavigateToDetail: (String) -> Unit
+    onNavigateToDetail: (String) -> Unit,
+    onNavigateToProfile: () -> Unit
 ) {
     val viewModel: HomeViewModel = viewModel(
         factory = viewModelFactory { HomeViewModel(networkService, favoritesService) }
@@ -23,6 +24,7 @@ fun HomeScreen(
         state = state,
         onRefresh = viewModel::onRefresh,
         onItemClick = onNavigateToDetail,
-        onFavoriteToggle = viewModel::onFavoriteToggle
+        onFavoriteToggle = viewModel::onFavoriteToggle,
+        onProfileClick = onNavigateToProfile
     )
 }

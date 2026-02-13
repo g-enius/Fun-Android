@@ -30,7 +30,7 @@ class DetailViewModelTest {
     private lateinit var networkService: NetworkService
     private lateinit var favoritesService: FavoritesService
 
-    private val mockItem = Item("1", "Test Item", "Test Description", "Category A")
+    private val mockItem = Item("1", "Test Item", "Test Description", category = "Category A")
 
     @BeforeEach
     fun setup() {

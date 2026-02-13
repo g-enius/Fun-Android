@@ -7,6 +7,7 @@ import com.funapp.android.services.network.NetworkService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class DetailViewModel(
@@ -25,20 +26,24 @@ class DetailViewModel(
 
     private fun loadDetails() {
         viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true, error = null)
+            _state.update { it.copy(isLoading = true, error = null) }
             networkService.fetchItemDetails(itemId)
                 .onSuccess { item ->
                     val isFav = favoritesService.isFavorite(item.id)
-                    _state.value = DetailState(
-                        isLoading = false,
-                        item = item.copy(isFavorite = isFav)
-                    )
+                    _state.update {
+                        DetailState(
+                            isLoading = false,
+                            item = item.copy(isFavorite = isFav)
+                        )
+                    }
                 }
                 .onFailure { error ->
-                    _state.value = DetailState(
-                        isLoading = false,
-                        error = error.message ?: "Unknown error"
-                    )
+                    _state.update {
+                        DetailState(
+                            isLoading = false,
+                            error = error.message ?: "Unknown error"
+                        )
+                    }
                 }
         }
     }
@@ -46,10 +51,12 @@ class DetailViewModel(
     private fun observeFavorites() {
         viewModelScope.launch {
             favoritesService.getFavorites().collect { favorites ->
-                val currentItem = _state.value.item ?: return@collect
-                _state.value = _state.value.copy(
-                    item = currentItem.copy(isFavorite = favorites.contains(currentItem.id))
-                )
+                _state.update { current ->
+                    val currentItem = current.item ?: return@collect
+                    current.copy(
+                        item = currentItem.copy(isFavorite = favorites.contains(currentItem.id))
+                    )
+                }
             }
         }
     }

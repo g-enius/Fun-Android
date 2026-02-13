@@ -67,7 +67,8 @@ class HomeViewModelTest {
 
         val state = viewModel.state.value
         assertFalse(state.isLoading)
-        assertEquals(2, state.items.size)
+        assertEquals(1, state.carouselPages.size)
+        assertEquals(2, state.carouselPages.first().size)
         assertNull(state.error)
     }
 
@@ -98,7 +99,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `favorites are reflected in items`() = runTest {
+    fun `favorites are reflected in carousel pages`() = runTest {
         coEvery { networkService.fetchHomeData() } returns Result.success(mockItems)
         every { favoritesService.getFavorites() } returns flowOf(setOf("1"))
 
@@ -106,7 +107,8 @@ class HomeViewModelTest {
         advanceUntilIdle()
 
         val state = viewModel.state.value
-        assertTrue(state.items.first { it.id == "1" }.isFavorite)
-        assertFalse(state.items.first { it.id == "2" }.isFavorite)
+        val allItems = state.carouselPages.flatten()
+        assertTrue(allItems.first { it.id == "1" }.isFavorite)
+        assertFalse(allItems.first { it.id == "2" }.isFavorite)
     }
 }

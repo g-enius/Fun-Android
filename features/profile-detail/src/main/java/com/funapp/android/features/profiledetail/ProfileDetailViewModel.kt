@@ -6,6 +6,7 @@ import com.funapp.android.services.network.NetworkService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class ProfileDetailViewModel(
@@ -22,16 +23,18 @@ class ProfileDetailViewModel(
 
     private fun loadProfile() {
         viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true, error = null)
+            _state.update { it.copy(isLoading = true, error = null) }
             networkService.fetchUserProfile(userId)
                 .onSuccess { profile ->
-                    _state.value = ProfileDetailState(isLoading = false, profile = profile)
+                    _state.update { ProfileDetailState(isLoading = false, profile = profile) }
                 }
                 .onFailure { error ->
-                    _state.value = ProfileDetailState(
-                        isLoading = false,
-                        error = error.message ?: "Unknown error"
-                    )
+                    _state.update {
+                        ProfileDetailState(
+                            isLoading = false,
+                            error = error.message ?: "Unknown error"
+                        )
+                    }
                 }
         }
     }

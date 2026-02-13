@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @OptIn(FlowPreview::class)
@@ -39,21 +40,17 @@ class SearchViewModel(
                     if (query.isBlank()) {
                         flowOf(null)
                     } else {
-                        _state.value = _state.value.copy(isLoading = true)
+                        _state.update { it.copy(isLoading = true) }
                         searchService.search(query)
                     }
                 }
                 .collect { result ->
                     if (result == null) {
-                        _state.value = _state.value.copy(
-                            isLoading = false,
-                            results = emptyList()
-                        )
+                        _state.update { it.copy(isLoading = false, results = emptyList()) }
                     } else {
-                        _state.value = _state.value.copy(
-                            isLoading = false,
-                            results = result.results
-                        )
+                        _state.update {
+                            it.copy(isLoading = false, results = result.results)
+                        }
                     }
                 }
         }
@@ -62,17 +59,19 @@ class SearchViewModel(
     private fun observeFavorites() {
         viewModelScope.launch {
             favoritesService.getFavorites().collect { favorites ->
-                _state.value = _state.value.copy(
-                    results = _state.value.results.map { item ->
-                        item.copy(isFavorite = favorites.contains(item.id))
-                    }
-                )
+                _state.update { current ->
+                    current.copy(
+                        results = current.results.map { item ->
+                            item.copy(isFavorite = favorites.contains(item.id))
+                        }
+                    )
+                }
             }
         }
     }
 
     fun onQueryChange(query: String) {
-        _state.value = _state.value.copy(query = query)
+        _state.update { it.copy(query = query) }
         searchQuery.value = query
     }
 

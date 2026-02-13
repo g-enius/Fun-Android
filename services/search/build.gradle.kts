@@ -22,8 +22,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":model"))
-    implementation(project(":services:network"))
+    api(project(":model"))
+    api(project(":services:network"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 }

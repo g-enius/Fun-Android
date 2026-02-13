@@ -11,30 +11,40 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
+enum class AppearanceMode {
+    SYSTEM, LIGHT, DARK
+}
+
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = Blue80,
+    secondary = BlueGrey80,
+    tertiary = LightBlue80
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    primary = Blue40,
+    secondary = BlueGrey40,
+    tertiary = LightBlue40
 )
 
 @Composable
 fun FunTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    appearanceMode: AppearanceMode = AppearanceMode.SYSTEM,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val isDark = when (appearanceMode) {
+        AppearanceMode.SYSTEM -> darkTheme
+        AppearanceMode.LIGHT -> false
+        AppearanceMode.DARK -> true
+    }
+    val colorScheme = if (isDark) DarkColorScheme else LightColorScheme
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !isDark
         }
     }
 
