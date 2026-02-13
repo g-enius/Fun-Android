@@ -2,6 +2,7 @@ package com.funapp.android.features.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.funapp.android.model.TechnologyDescriptions
 import com.funapp.android.services.favorites.FavoritesService
 import com.funapp.android.services.network.NetworkService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,10 +31,12 @@ class DetailViewModel(
             networkService.fetchItemDetails(itemId)
                 .onSuccess { item ->
                     val isFav = favoritesService.isFavorite(item.id)
+                    val detailedDescription = TechnologyDescriptions.description(item.id)
                     _state.update {
                         DetailState(
                             isLoading = false,
-                            item = item.copy(isFavorite = isFav)
+                            item = item.copy(isFavorite = isFav),
+                            detailedDescription = detailedDescription
                         )
                     }
                 }

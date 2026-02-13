@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -39,7 +40,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.funapp.android.model.Item
@@ -100,31 +103,121 @@ internal fun ItemsContent(
                         }
                     }
 
-                    // Item list
-                    LazyColumn(
-                        modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(horizontal = 16.dp)
-                    ) {
-                        items(state.filteredItems, key = { it.id }) { item ->
-                            ItemRow(
-                                item = item,
-                                onClick = { onItemClick(item.id) },
-                                onFavoriteToggle = { onFavoriteToggle(item.id) }
-                            )
-                            HorizontalDivider(
-                                modifier = Modifier.padding(start = 56.dp),
-                                color = MaterialTheme.colorScheme.outlineVariant
-                            )
+                    // Item list / searching / empty states
+                    Box(modifier = Modifier.weight(1f)) {
+                        when {
+                            state.isSearching -> {
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "Searching...",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            state.needsMoreCharacters -> {
+                                KeepTypingView()
+                            }
+                            state.query.trim().length >= 2 && state.filteredItems.isEmpty() -> {
+                                EmptySearchResultsView()
+                            }
+                            else -> {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(horizontal = 16.dp)
+                                ) {
+                                    items(state.filteredItems, key = { it.id }) { item ->
+                                        ItemRow(
+                                            item = item,
+                                            onClick = { onItemClick(item.id) },
+                                            onFavoriteToggle = { onFavoriteToggle(item.id) }
+                                        )
+                                        HorizontalDivider(
+                                            modifier = Modifier.padding(start = 56.dp),
+                                            color = MaterialTheme.colorScheme.outlineVariant
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
 
                     // Search bar at bottom
                     SearchBar(
                         query = state.query,
+                        isSearching = state.isSearching,
                         onQueryChanged = onQueryChanged
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun KeepTypingView() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = Color.Gray
+            )
+            Text(
+                text = "Keep Typing",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = "Type at least 2 characters to search",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptySearchResultsView() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = Color.Gray
+            )
+            Text(
+                text = "No Results",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = "Try a different search term",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -182,6 +275,16 @@ private fun ItemRow(
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary
             )
+            if (item.iosEquivalent != null) {
+                Text(
+                    text = "iOS equivalent: ${item.iosEquivalent}",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontStyle = FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
 
         FavoriteButton(
@@ -194,6 +297,7 @@ private fun ItemRow(
 @Composable
 private fun SearchBar(
     query: String,
+    isSearching: Boolean,
     onQueryChanged: (String) -> Unit
 ) {
     Box(
@@ -204,12 +308,19 @@ private fun SearchBar(
         TextField(
             value = query,
             onValueChange = onQueryChanged,
-            placeholder = { Text("Search items...") },
+            placeholder = { Text("Search (min 2 characters)...") },
             leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search"
-                )
+                if (isSearching) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search"
+                    )
+                }
             },
             trailingIcon = {
                 if (query.isNotEmpty()) {

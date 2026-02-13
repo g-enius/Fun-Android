@@ -9,5 +9,6 @@ data class Item(
     val iconName: String = "",
     val iconColor: String = "",
     val imageUrl: String? = null,
-    val isFavorite: Boolean = false
+    val isFavorite: Boolean = false,
+    val iosEquivalent: String? = null
 )

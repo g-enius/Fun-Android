@@ -5,69 +5,101 @@ import com.funapp.android.model.SearchResult
 import com.funapp.android.model.UserProfile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 
-class DefaultNetworkService : NetworkService {
+class DefaultNetworkService(
+    private val simulateErrors: StateFlow<Boolean>? = null
+) : NetworkService {
 
     private val allItems = listOf(
-        Item("1", "Async/Await", "Swift's modern concurrency model uses async/await to write asynchronous code that looks synchronous. It eliminates callback pyramids and makes error handling straightforward with try/catch.", "Structured concurrency for modern Swift apps", "Concurrency", "bolt", "green"),
-        Item("2", "Combine", "Apple's reactive framework for processing values over time. Combine provides a declarative Swift API for handling asynchronous events, with publishers, subscribers, and operators.", "Reactive programming with publishers and subscribers", "Reactive", "arrow.triangle.merge", "orange"),
-        Item("3", "SwiftUI", "Apple's declarative UI framework that enables building user interfaces across all Apple platforms. SwiftUI uses a reactive data-driven approach with property wrappers like @State and @Binding.", "Declarative UI framework for Apple platforms", "UI", "rectangle.on.rectangle", "blue"),
-        Item("4", "Coordinator", "The Coordinator pattern manages navigation flow by extracting it from view controllers. Each coordinator handles a specific flow, making navigation testable and reusable.", "Navigation pattern for managing app flow", "Architecture", "arrow.triangle.branch", "purple"),
-        Item("5", "MVVM", "Model-View-ViewModel separates UI logic from business logic. The ViewModel exposes observable state that the View binds to, while the Model handles data and business rules.", "Separating concerns with observable view models", "Architecture", "square.stack.3d.up", "indigo"),
-        Item("6", "SPM Modules", "Swift Package Manager enables modular architecture by splitting your app into focused packages. Each module has clear boundaries, explicit dependencies, and can be developed and tested independently.", "Modular architecture with Swift packages", "Modularity", "shippingbox", "brown"),
-        Item("7", "ServiceLocator", "A service locator provides a central registry for dependencies. Components request services from the locator rather than creating them directly, enabling loose coupling and testability.", "Central registry for dependency management", "DI", "magnifyingglass.circle", "teal"),
-        Item("8", "Protocol-Oriented", "Protocol-oriented programming favors protocols over inheritance. By defining behavior through protocols and providing default implementations via extensions, you get flexible and composable abstractions.", "Favoring composition over inheritance", "Patterns", "list.bullet.rectangle", "mint"),
-        Item("9", "Feature Toggles", "Feature toggles (or feature flags) allow you to enable or disable features at runtime. They support A/B testing, gradual rollouts, and quick feature kill switches without redeployment.", "Runtime feature management and A/B testing", "DevOps", "switch.2", "cyan"),
-        Item("10", "OSLog", "Apple's unified logging system provides structured, performant logging with levels, categories, and privacy controls. OSLog integrates with Console.app and Instruments for powerful debugging.", "Structured logging with Apple's unified system", "Debugging", "doc.text.magnifyingglass", "gray"),
-        Item("11", "Swift 6", "Swift 6 introduces complete concurrency checking, ensuring data race safety at compile time. The strict concurrency model catches potential issues before they become runtime crashes.", "Complete concurrency safety at compile time", "Language", "swift", "red"),
-        Item("12", "Swift Testing", "Swift Testing is a modern test framework with expressive APIs. It uses #expect and #require macros, supports parameterized tests, and integrates seamlessly with Swift concurrency.", "Modern testing with expressive macros", "Testing", "checkmark.seal", "green"),
-        Item("13", "Snapshot Testing", "Snapshot testing captures the rendered output of UI components and compares against reference images. It catches unintended visual regressions automatically during CI.", "Visual regression testing for UI components", "Testing", "camera.viewfinder", "pink"),
-        Item("14", "Accessibility", "Building accessible apps ensures everyone can use your software. VoiceOver, Dynamic Type, and semantic labels make apps usable for people with disabilities.", "Making apps usable for everyone", "UX", "accessibility", "blue")
+        Item("1", "Coroutines", "Kotlin Coroutines provide a lightweight concurrency framework for Android. They simplify asynchronous programming with suspend functions, structured concurrency, and seamless integration with Jetpack libraries.", "Lightweight concurrency for modern Android apps", "Concurrency", "bolt", "green", iosEquivalent = "Async/Await"),
+        Item("2", "Kotlin Flow", "Kotlin Flow is a reactive streams library built on coroutines. It provides cold asynchronous data streams with operators for transforming, combining, and collecting values over time.", "Reactive streams with coroutines integration", "Reactive", "arrow.triangle.merge", "orange", iosEquivalent = "Combine"),
+        Item("3", "Jetpack Compose", "Android's modern declarative UI toolkit that simplifies and accelerates UI development. Compose uses a reactive data-driven approach with state hoisting and recomposition.", "Declarative UI toolkit for Android", "UI", "rectangle.on.rectangle", "blue", iosEquivalent = "SwiftUI"),
+        Item("4", "Navigation Component", "Jetpack Navigation manages app navigation with a visual editor and type-safe arguments. It handles fragment transactions, deep links, and back stack management.", "Type-safe navigation for managing app flow", "Architecture", "arrow.triangle.branch", "purple", iosEquivalent = "Coordinator pattern"),
+        Item("5", "MVVM", "Model-View-ViewModel separates UI logic from business logic. The ViewModel exposes observable state via StateFlow that Compose collects, while the Model handles data and business rules.", "Separating concerns with observable view models", "Architecture", "square.stack.3d.up", "indigo", iosEquivalent = "MVVM with @Published and ObservableObject"),
+        Item("6", "Gradle Modules", "Gradle multi-module architecture splits your app into focused modules. Each module has clear boundaries, explicit dependencies, and can be built and tested independently for faster builds.", "Modular architecture with Gradle modules", "Modularity", "shippingbox", "brown", iosEquivalent = "SPM Modules"),
+        Item("7", "Hilt", "Hilt is Android's recommended dependency injection library built on Dagger. It provides a standard way to incorporate DI with compile-time validation and Android lifecycle awareness.", "Compile-time dependency injection for Android", "DI", "magnifyingglass.circle", "teal", iosEquivalent = "ServiceLocator"),
+        Item("8", "Interface-Oriented", "Interface-oriented design in Kotlin favors interfaces over inheritance. By defining behavior through interfaces and providing default implementations, you get flexible and testable abstractions.", "Favoring composition over inheritance", "Patterns", "list.bullet.rectangle", "mint", iosEquivalent = "Protocol-Oriented Programming"),
+        Item("9", "Feature Toggles", "Feature toggles (or feature flags) allow you to enable or disable features at runtime. They support A/B testing, gradual rollouts, and quick feature kill switches without redeployment.", "Runtime feature management and A/B testing", "DevOps", "switch.2", "cyan", iosEquivalent = "Feature Toggles (same pattern)"),
+        Item("10", "Timber", "Timber is a popular Android logging library that extends the standard Log API with automatic tag generation, tree-based logging, and easy configuration for debug and release builds.", "Extensible logging with tree-based architecture", "Debugging", "doc.text.magnifyingglass", "gray", iosEquivalent = "OSLog"),
+        Item("11", "Kotlin 2.0", "Kotlin 2.0 brings the new K2 compiler with dramatically faster compilation, improved type inference, and better IDE support. It sets the foundation for future language evolution.", "Next-generation compiler with faster builds", "Language", "swift", "red", iosEquivalent = "Swift 6"),
+        Item("12", "JUnit 5", "JUnit 5 is the modern Java/Kotlin testing framework with expressive APIs. It supports parameterized tests, nested test classes, and extensions for comprehensive test coverage.", "Modern testing with expressive assertions", "Testing", "checkmark.seal", "green", iosEquivalent = "Swift Testing"),
+        Item("13", "Screenshot Testing", "Screenshot testing captures the rendered output of Compose UI components and compares against reference images. It catches unintended visual regressions automatically during CI.", "Visual regression testing for Compose UI", "Testing", "camera.viewfinder", "pink", iosEquivalent = "Snapshot Testing"),
+        Item("14", "Accessibility", "Building accessible Android apps ensures everyone can use your software. TalkBack, content descriptions, and semantic properties make apps usable for people with disabilities.", "Making apps usable for everyone", "UX", "accessibility", "blue", iosEquivalent = "VoiceOver and Dynamic Type")
     )
+
+    private fun checkSimulateErrors() {
+        if (simulateErrors?.value == true) {
+            throw Exception("Simulated network error")
+        }
+    }
 
     override suspend fun fetchHomeData(): Result<List<Item>> = withContext(Dispatchers.IO) {
         delay(500)
-        Result.success(allItems)
+        try {
+            checkSimulateErrors()
+            Result.success(allItems)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     override suspend fun fetchItemDetails(itemId: String): Result<Item> = withContext(Dispatchers.IO) {
         delay(300)
-        val item = allItems.find { it.id == itemId }
-        if (item != null) {
-            Result.success(item)
-        } else {
-            Result.success(
-                Item(
-                    id = itemId,
-                    title = "Item $itemId",
-                    description = "Details for item $itemId.",
-                    category = "General"
+        try {
+            checkSimulateErrors()
+            val item = allItems.find { it.id == itemId }
+            if (item != null) {
+                Result.success(item)
+            } else {
+                Result.success(
+                    Item(
+                        id = itemId,
+                        title = "Item $itemId",
+                        description = "Details for item $itemId.",
+                        category = "General"
+                    )
                 )
-            )
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
     override suspend fun searchItems(query: String): Result<SearchResult> = withContext(Dispatchers.IO) {
         delay(300)
-        val filtered = allItems.filter {
-            it.title.contains(query, ignoreCase = true) ||
-                it.description.contains(query, ignoreCase = true) ||
-                it.category.contains(query, ignoreCase = true) ||
-                it.subtitle.contains(query, ignoreCase = true)
+        try {
+            checkSimulateErrors()
+            val filtered = allItems.filter {
+                it.title.contains(query, ignoreCase = true) ||
+                    it.description.contains(query, ignoreCase = true) ||
+                    it.category.contains(query, ignoreCase = true) ||
+                    it.subtitle.contains(query, ignoreCase = true)
+            }
+            Result.success(SearchResult(query = query, results = filtered, totalCount = filtered.size))
+        } catch (e: Exception) {
+            Result.failure(e)
         }
-        Result.success(SearchResult(query = query, results = filtered, totalCount = filtered.size))
     }
 
     override suspend fun fetchUserProfile(userId: String): Result<UserProfile> = withContext(Dispatchers.IO) {
         delay(400)
-        Result.success(
-            UserProfile(
-                id = userId,
-                name = "Alex Developer",
-                email = "alex@funapp.demo",
-                bio = "iOS & Android developer passionate about clean architecture and great user experiences."
+        try {
+            checkSimulateErrors()
+            Result.success(
+                UserProfile(
+                    id = userId,
+                    name = "Alex Developer",
+                    email = "alex@funapp.demo",
+                    bio = "Android developer passionate about clean architecture, Jetpack Compose, and great user experiences.",
+                    viewsCount = 1247,
+                    favoritesCount = 38,
+                    daysCount = 142
+                )
             )
-        )
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }
