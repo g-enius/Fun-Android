@@ -1,6 +1,8 @@
 # Fun - Android Demo App
 
-A modern Android application demonstrating clean architecture (MVVM), Jetpack Compose, multi-module design, and best practices for scalable Android development. Android counterpart of the [Fun iOS app](https://github.com/g-enius/Fun).
+[![CI](https://github.com/g-enius/Fun-Android/actions/workflows/ci.yml/badge.svg)](https://github.com/g-enius/Fun-Android/actions/workflows/ci.yml)
+
+A modern Android application demonstrating clean architecture (MVVM), Jetpack Compose, multi-module design, and best practices for scalable Android development. Android counterpart of the [Fun iOS app](https://github.com/g-enius/Fun-iOS).
 
 ## Tech Stack
 
@@ -138,7 +140,7 @@ NavHost
 
 ### Installation
 ```bash
-git clone <repo-url>
+git clone https://github.com/g-enius/Fun-Android.git
 cd Fun-Android
 ```
 
