@@ -10,6 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -34,7 +35,9 @@ class ItemsViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             networkService.fetchHomeData()
-                .onSuccess { items ->
+                .onSuccess { data ->
+                    val favorites = favoritesService.getFavorites().first()
+                    val items = data.map { it.copy(isFavorite = favorites.contains(it.id)) }
                     val categories = items.map { it.category }.distinct().sorted()
                     _state.update {
                         it.copy(

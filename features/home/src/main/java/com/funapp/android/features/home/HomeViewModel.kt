@@ -9,6 +9,7 @@ import com.funapp.android.services.network.NetworkService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -31,7 +32,9 @@ class HomeViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             networkService.fetchHomeData()
-                .onSuccess { data ->
+                .onSuccess { result ->
+                    val favorites = favoritesService.getFavorites().first()
+                    val data = result.map { it.copy(isFavorite = favorites.contains(it.id)) }
                     _state.update {
                         it.copy(
                             isLoading = false,
