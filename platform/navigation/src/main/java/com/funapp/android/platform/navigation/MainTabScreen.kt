@@ -12,14 +12,11 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.funapp.android.features.home.HomeScreen
 import com.funapp.android.features.items.ItemsScreen
 import com.funapp.android.features.settings.SettingsScreen
+import com.funapp.android.platform.ui.AppSettings
 import com.funapp.android.services.favorites.FavoritesService
 import com.funapp.android.services.network.NetworkService
 import com.funapp.android.services.search.SearchService
@@ -29,29 +26,31 @@ fun MainTabScreen(
     networkService: NetworkService,
     favoritesService: FavoritesService,
     searchService: SearchService,
+    appSettings: AppSettings,
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit,
     onNavigateToDetail: (String) -> Unit,
     onNavigateToProfile: () -> Unit
 ) {
-    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
     Scaffold(
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(
                     selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
+                    onClick = { onTabSelected(0) },
                     icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
                     label = { Text("Home") }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
+                    onClick = { onTabSelected(1) },
                     icon = { Icon(Icons.Default.List, contentDescription = "Items") },
                     label = { Text("Items") }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
+                    onClick = { onTabSelected(2) },
                     icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
                     label = { Text("Settings") }
                 )
@@ -63,6 +62,7 @@ fun MainTabScreen(
                 0 -> HomeScreen(
                     networkService = networkService,
                     favoritesService = favoritesService,
+                    appSettings = appSettings,
                     onNavigateToDetail = onNavigateToDetail,
                     onNavigateToProfile = onNavigateToProfile
                 )
@@ -71,7 +71,7 @@ fun MainTabScreen(
                     favoritesService = favoritesService,
                     onNavigateToDetail = onNavigateToDetail
                 )
-                2 -> SettingsScreen()
+                2 -> SettingsScreen(appSettings = appSettings)
             }
         }
     }

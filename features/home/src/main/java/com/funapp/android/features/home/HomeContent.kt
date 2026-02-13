@@ -13,12 +13,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.ViewCarousel
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.funapp.android.model.Item
@@ -68,7 +71,7 @@ internal fun HomeContent(
         }
     ) { padding ->
         when {
-            state.isLoading && state.carouselPages.isEmpty() -> {
+            state.isLoading && state.carouselPages.isEmpty() && state.allItems.isEmpty() -> {
                 LoadingIndicator(modifier = Modifier.padding(padding))
             }
             state.error != null -> {
@@ -84,11 +87,15 @@ internal fun HomeContent(
                     onRefresh = onRefresh,
                     modifier = Modifier.padding(padding)
                 ) {
-                    CarouselContent(
-                        pages = state.carouselPages,
-                        onItemClick = onItemClick,
-                        onFavoriteToggle = onFavoriteToggle
-                    )
+                    if (state.carouselEnabled) {
+                        CarouselView(
+                            pages = state.carouselPages,
+                            onItemClick = onItemClick,
+                            onFavoriteToggle = onFavoriteToggle
+                        )
+                    } else {
+                        CarouselDisabledView()
+                    }
                 }
             }
         }
@@ -96,7 +103,7 @@ internal fun HomeContent(
 }
 
 @Composable
-private fun CarouselContent(
+private fun CarouselView(
     pages: List<List<Item>>,
     onItemClick: (String) -> Unit,
     onFavoriteToggle: (String) -> Unit
@@ -105,57 +112,107 @@ private fun CarouselContent(
 
     val pagerState = rememberPagerState(pageCount = { pages.size })
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
+    LazyColumn(
+        modifier = Modifier.fillMaxSize()
     ) {
-        HorizontalPager(
-            state = pagerState,
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            pageSpacing = 12.dp,
-            modifier = Modifier.weight(1f)
-        ) { pageIndex ->
-            val pageItems = pages[pageIndex]
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+        item {
+            Text(
+                text = "Featured",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(vertical = 8.dp)
-            ) {
-                pageItems.forEach { item ->
-                    CarouselCard(
-                        item = item,
-                        onItemClick = { onItemClick(item.id) },
-                        onFavoriteToggle = { onFavoriteToggle(item.id) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                // Fill space if only 1 item on last page
-                if (pageItems.size < 2) {
-                    Spacer(modifier = Modifier.weight(1f))
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        }
+
+        item {
+            HorizontalPager(
+                state = pagerState,
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                pageSpacing = 16.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+            ) { pageIndex ->
+                val pageItems = pages[pageIndex]
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    pageItems.forEach { item ->
+                        CarouselCard(
+                            item = item,
+                            onItemClick = { onItemClick(item.id) },
+                            onFavoriteToggle = { onFavoriteToggle(item.id) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    if (pageItems.size < 2) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
                 }
             }
         }
 
         // Page indicator dots
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(bottom = 16.dp)
-        ) {
-            repeat(pages.size) { index ->
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (index == pagerState.currentPage)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                Color.LightGray
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    repeat(pages.size) { index ->
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (index == pagerState.currentPage)
+                                        MaterialTheme.colorScheme.primary
+                                    else
+                                        Color.Gray.copy(alpha = 0.4f)
+                                )
                         )
-                )
+                    }
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun CarouselDisabledView() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.ViewCarousel,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = Color.Gray
+            )
+            Text(
+                text = "Carousel Disabled",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = "Enable the carousel from Settings",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -171,41 +228,42 @@ private fun CarouselCard(
 
     Card(
         modifier = modifier
-            .fillMaxWidth()
             .clickable(onClick = onItemClick),
         colors = CardDefaults.cardColors(containerColor = bgColor),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Column {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
                 Text(
                     text = item.title,
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 if (item.subtitle.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = item.subtitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.85f),
-                        maxLines = 2,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.8f),
+                        maxLines = 3,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp)
             ) {
                 FavoriteButton(
                     isFavorite = item.isFavorite,

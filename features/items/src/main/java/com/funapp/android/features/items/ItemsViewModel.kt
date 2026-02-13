@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.funapp.android.model.Item
 import com.funapp.android.services.favorites.FavoritesService
 import com.funapp.android.services.network.NetworkService
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,6 +20,10 @@ class ItemsViewModel(
 
     private val _state = MutableStateFlow(ItemsState(isLoading = true))
     val state: StateFlow<ItemsState> = _state.asStateFlow()
+
+    private var searchJob: Job? = null
+
+    private val minimumSearchCharacters = 2
 
     init {
         loadItems()
@@ -69,7 +75,25 @@ class ItemsViewModel(
 
     fun onQueryChanged(query: String) {
         _state.update { it.copy(query = query) }
-        applyFilters()
+        searchJob?.cancel()
+
+        val trimmed = query.trim()
+        if (trimmed.isEmpty()) {
+            _state.update { it.copy(isSearching = false, needsMoreCharacters = false) }
+            applyFilters()
+        } else if (trimmed.length < minimumSearchCharacters) {
+            _state.update { it.copy(isSearching = false, needsMoreCharacters = true, filteredItems = emptyList()) }
+        } else {
+            _state.update { it.copy(needsMoreCharacters = false) }
+            searchJob = viewModelScope.launch {
+                _state.update { it.copy(isSearching = true) }
+                delay(400)
+                // Simulate network delay
+                delay((300L..800L).random())
+                applyFilters(randomize = true)
+                _state.update { it.copy(isSearching = false) }
+            }
+        }
     }
 
     fun onCategorySelected(category: String?) {
@@ -85,7 +109,7 @@ class ItemsViewModel(
         }
     }
 
-    private fun applyFilters() {
+    private fun applyFilters(randomize: Boolean = false) {
         _state.update { current ->
             var items = current.allItems
 
@@ -94,12 +118,15 @@ class ItemsViewModel(
             }
 
             if (current.query.isNotBlank()) {
-                val q = current.query
+                val q = current.query.trim()
                 items = items.filter {
                     it.title.contains(q, ignoreCase = true) ||
                         it.subtitle.contains(q, ignoreCase = true) ||
                         it.category.contains(q, ignoreCase = true) ||
                         it.description.contains(q, ignoreCase = true)
+                }
+                if (randomize) {
+                    items = items.shuffled()
                 }
             }
 

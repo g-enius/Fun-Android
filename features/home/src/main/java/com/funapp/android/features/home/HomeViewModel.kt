@@ -3,6 +3,7 @@ package com.funapp.android.features.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.funapp.android.model.Item
+import com.funapp.android.platform.ui.AppSettings
 import com.funapp.android.services.favorites.FavoritesService
 import com.funapp.android.services.network.NetworkService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,17 +14,17 @@ import kotlinx.coroutines.launch
 
 class HomeViewModel(
     private val networkService: NetworkService,
-    private val favoritesService: FavoritesService
+    private val favoritesService: FavoritesService,
+    private val appSettings: AppSettings
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeState(isLoading = true))
     val state: StateFlow<HomeState> = _state.asStateFlow()
 
-    private var allItems: List<Item> = emptyList()
-
     init {
         loadData()
         observeFavorites()
+        observeCarouselToggle()
     }
 
     private fun loadData() {
@@ -31,11 +32,11 @@ class HomeViewModel(
             _state.update { it.copy(isLoading = true, error = null) }
             networkService.fetchHomeData()
                 .onSuccess { data ->
-                    allItems = data
                     _state.update {
                         it.copy(
                             isLoading = false,
-                            carouselPages = data.chunked(2)
+                            allItems = data,
+                            carouselPages = data.shuffled().chunked(2)
                         )
                     }
                 }
@@ -55,6 +56,9 @@ class HomeViewModel(
             favoritesService.getFavorites().collect { favorites ->
                 _state.update { current ->
                     current.copy(
+                        allItems = current.allItems.map { item ->
+                            item.copy(isFavorite = favorites.contains(item.id))
+                        },
                         carouselPages = current.carouselPages.map { page ->
                             page.map { item ->
                                 item.copy(isFavorite = favorites.contains(item.id))
@@ -62,6 +66,14 @@ class HomeViewModel(
                         }
                     )
                 }
+            }
+        }
+    }
+
+    private fun observeCarouselToggle() {
+        viewModelScope.launch {
+            appSettings.featuredCarouselEnabled.collect { enabled ->
+                _state.update { it.copy(carouselEnabled = enabled) }
             }
         }
     }

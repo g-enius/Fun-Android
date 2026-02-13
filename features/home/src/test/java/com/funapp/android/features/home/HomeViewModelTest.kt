@@ -1,6 +1,7 @@
 package com.funapp.android.features.home
 
 import com.funapp.android.model.Item
+import com.funapp.android.platform.ui.AppSettings
 import com.funapp.android.services.favorites.FavoritesService
 import com.funapp.android.services.network.NetworkService
 import io.mockk.coEvery
@@ -29,6 +30,7 @@ class HomeViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var networkService: NetworkService
     private lateinit var favoritesService: FavoritesService
+    private lateinit var appSettings: AppSettings
 
     private val mockItems = listOf(
         Item("1", "Item 1", "Desc 1"),
@@ -40,6 +42,7 @@ class HomeViewModelTest {
         Dispatchers.setMain(testDispatcher)
         networkService = mockk()
         favoritesService = mockk()
+        appSettings = AppSettings()
         every { favoritesService.getFavorites() } returns flowOf(emptySet())
     }
 
@@ -52,7 +55,7 @@ class HomeViewModelTest {
     fun `initial state is loading`() = runTest {
         coEvery { networkService.fetchHomeData() } returns Result.success(mockItems)
 
-        val viewModel = HomeViewModel(networkService, favoritesService)
+        val viewModel = HomeViewModel(networkService, favoritesService, appSettings)
         val initialState = viewModel.state.value
 
         assertTrue(initialState.isLoading)
@@ -62,7 +65,7 @@ class HomeViewModelTest {
     fun `loads home data successfully`() = runTest {
         coEvery { networkService.fetchHomeData() } returns Result.success(mockItems)
 
-        val viewModel = HomeViewModel(networkService, favoritesService)
+        val viewModel = HomeViewModel(networkService, favoritesService, appSettings)
         advanceUntilIdle()
 
         val state = viewModel.state.value
@@ -76,7 +79,7 @@ class HomeViewModelTest {
     fun `handles network error`() = runTest {
         coEvery { networkService.fetchHomeData() } returns Result.failure(Exception("Network error"))
 
-        val viewModel = HomeViewModel(networkService, favoritesService)
+        val viewModel = HomeViewModel(networkService, favoritesService, appSettings)
         advanceUntilIdle()
 
         val state = viewModel.state.value
@@ -89,7 +92,7 @@ class HomeViewModelTest {
         coEvery { networkService.fetchHomeData() } returns Result.success(mockItems)
         coEvery { favoritesService.toggleFavorite(any()) } returns Unit
 
-        val viewModel = HomeViewModel(networkService, favoritesService)
+        val viewModel = HomeViewModel(networkService, favoritesService, appSettings)
         advanceUntilIdle()
 
         viewModel.onFavoriteToggle("1")
@@ -103,7 +106,7 @@ class HomeViewModelTest {
         coEvery { networkService.fetchHomeData() } returns Result.success(mockItems)
         every { favoritesService.getFavorites() } returns flowOf(setOf("1"))
 
-        val viewModel = HomeViewModel(networkService, favoritesService)
+        val viewModel = HomeViewModel(networkService, favoritesService, appSettings)
         advanceUntilIdle()
 
         val state = viewModel.state.value

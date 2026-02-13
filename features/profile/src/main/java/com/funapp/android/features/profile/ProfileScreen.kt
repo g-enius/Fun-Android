@@ -10,8 +10,8 @@ import com.funapp.android.services.network.NetworkService
 @Composable
 fun ProfileScreen(
     networkService: NetworkService,
-    onNavigateToProfile: (String) -> Unit,
-    onViewProfile: () -> Unit
+    onSearchItems: () -> Unit,
+    onLogout: () -> Unit
 ) {
     val viewModel: ProfileViewModel = viewModel(
         factory = viewModelFactory { ProfileViewModel(networkService) }
@@ -21,6 +21,7 @@ fun ProfileScreen(
     ProfileContent(
         state = state,
         onRefresh = viewModel::onRefresh,
-        onViewProfile = onViewProfile
+        onSearchItems = onSearchItems,
+        onLogout = onLogout
     )
 }
