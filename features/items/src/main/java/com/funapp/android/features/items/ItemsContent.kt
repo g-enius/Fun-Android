@@ -58,7 +58,8 @@ internal fun ItemsContent(
     onItemClick: (String) -> Unit,
     onFavoriteToggle: (String) -> Unit,
     onQueryChanged: (String) -> Unit,
-    onCategorySelected: (String?) -> Unit
+    onCategorySelected: (String?) -> Unit,
+    onRetry: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -70,7 +71,7 @@ internal fun ItemsContent(
                 LoadingIndicator(modifier = Modifier.padding(padding))
             }
             state.error != null -> {
-                ErrorView(message = state.error, modifier = Modifier.padding(padding))
+                ErrorView(message = state.error, onRetry = onRetry, modifier = Modifier.padding(padding))
             }
             else -> {
                 Column(

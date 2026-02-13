@@ -91,9 +91,7 @@ class ItemsViewModel(
             searchJob = viewModelScope.launch {
                 _state.update { it.copy(isSearching = true) }
                 delay(400)
-                // Simulate network delay
-                delay((300L..800L).random())
-                applyFilters(randomize = true)
+                applyFilters()
                 _state.update { it.copy(isSearching = false) }
             }
         }
@@ -106,13 +104,17 @@ class ItemsViewModel(
         applyFilters()
     }
 
+    fun onRefresh() {
+        loadItems()
+    }
+
     fun onFavoriteToggle(itemId: String) {
         viewModelScope.launch {
             favoritesService.toggleFavorite(itemId)
         }
     }
 
-    private fun applyFilters(randomize: Boolean = false) {
+    private fun applyFilters() {
         _state.update { current ->
             var items = current.allItems
 
@@ -127,9 +129,6 @@ class ItemsViewModel(
                         it.subtitle.contains(q, ignoreCase = true) ||
                         it.category.contains(q, ignoreCase = true) ||
                         it.description.contains(q, ignoreCase = true)
-                }
-                if (randomize) {
-                    items = items.shuffled()
                 }
             }
 

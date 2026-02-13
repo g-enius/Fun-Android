@@ -3,6 +3,7 @@ package com.funapp.android.services.network
 import com.funapp.android.model.Item
 import com.funapp.android.model.SearchResult
 import com.funapp.android.model.UserProfile
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +41,8 @@ class DefaultNetworkService(
         try {
             checkSimulateErrors()
             Result.success(allItems)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -62,6 +65,8 @@ class DefaultNetworkService(
                     )
                 )
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -78,6 +83,8 @@ class DefaultNetworkService(
                     it.subtitle.contains(query, ignoreCase = true)
             }
             Result.success(SearchResult(query = query, results = filtered, totalCount = filtered.size))
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -98,6 +105,8 @@ class DefaultNetworkService(
                     daysCount = 142
                 )
             )
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }

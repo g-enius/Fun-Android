@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
@@ -44,6 +45,7 @@ class SearchViewModel(
                         searchService.search(query)
                     }
                 }
+                .catch { _state.update { it.copy(isLoading = false, results = emptyList()) } }
                 .collect { result ->
                     if (result == null) {
                         _state.update { it.copy(isLoading = false, results = emptyList()) }

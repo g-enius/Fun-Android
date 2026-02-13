@@ -4,6 +4,7 @@ import android.content.SharedPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 class DefaultFavoritesService(
     private val sharedPreferences: SharedPreferences
@@ -26,15 +27,13 @@ class DefaultFavoritesService(
     }
 
     override suspend fun addFavorite(itemId: String) {
-        val updated = _favorites.value.toMutableSet().apply { add(itemId) }
-        saveFavorites(updated)
-        _favorites.value = updated
+        _favorites.update { current -> current + itemId }
+        saveFavorites(_favorites.value)
     }
 
     override suspend fun removeFavorite(itemId: String) {
-        val updated = _favorites.value.toMutableSet().apply { remove(itemId) }
-        saveFavorites(updated)
-        _favorites.value = updated
+        _favorites.update { current -> current - itemId }
+        saveFavorites(_favorites.value)
     }
 
     private fun loadFavorites(): Set<String> {

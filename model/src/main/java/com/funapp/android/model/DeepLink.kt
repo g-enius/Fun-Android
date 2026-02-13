@@ -11,8 +11,7 @@ sealed class DeepLink {
         private val tabMap = mapOf(
             "home" to 0,
             "items" to 1,
-            "search" to 2,
-            "settings" to 3
+            "settings" to 2
         )
 
         fun parse(uriString: String?): DeepLink? {

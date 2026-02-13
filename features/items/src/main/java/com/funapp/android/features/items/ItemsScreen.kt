@@ -24,6 +24,7 @@ fun ItemsScreen(
         onItemClick = onNavigateToDetail,
         onFavoriteToggle = viewModel::onFavoriteToggle,
         onQueryChanged = viewModel::onQueryChanged,
-        onCategorySelected = viewModel::onCategorySelected
+        onCategorySelected = viewModel::onCategorySelected,
+        onRetry = viewModel::onRefresh
     )
 }
