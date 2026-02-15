@@ -169,41 +169,29 @@ implementation(project(":platform:ui"))
 """.trimIndent(),
 
         "7" to """
-Hilt is Android's recommended dependency injection library built on Dagger:
+Manual dependency injection passes dependencies through constructors without any framework:
 
-• Compile-time dependency validation catches errors early
-• Android lifecycle-aware scoping with @Singleton, @ActivityScoped, etc.
-• @Module and @Provides define how to create dependencies
-• @Inject on constructors or fields requests dependencies
+• No annotation processing or code generation — just plain Kotlin constructors
+• Dependencies are created in MainActivity and threaded through navigation
+• Interfaces define contracts, concrete types are only known at the composition root
+• Full control over object lifetimes with lazy initialization
 
-Example from a Hilt module:
+Example from this app:
 ```kotlin
-@Module
-@InstallIn(SingletonComponent::class)
-object NetworkModule {
-
-    @Provides
-    @Singleton
-    fun provideNetworkService(
-        appSettings: AppSettings
-    ): NetworkService {
-        return DefaultNetworkService(
-            simulateErrors = appSettings.simulateErrorsEnabled
-        )
+// MainActivity creates services at the composition root
+class MainActivity : ComponentActivity() {
+    private val appSettings by lazy { AppSettings() }
+    private val networkService by lazy {
+        DefaultNetworkService(simulateErrors = appSettings.simulateErrorsEnabled)
     }
-
-    @Provides
-    @Singleton
-    fun provideSearchService(
-        networkService: NetworkService
-    ): SearchService {
-        return DefaultSearchService(networkService)
-    }
+    private val favoritesService by lazy { DefaultFavoritesService() }
 }
 
-// Usage with @Inject:
-class HomeViewModel @Inject constructor(
-    private val networkService: NetworkService
+// ViewModels receive dependencies through their constructor
+class DetailViewModel(
+    private val itemId: String,
+    private val networkService: NetworkService,
+    private val favoritesService: FavoritesService
 ) : ViewModel()
 ```
 """.trimIndent(),
