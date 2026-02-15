@@ -14,6 +14,7 @@ import com.funapp.android.platform.ui.AppSettings
 import com.funapp.android.platform.ui.theme.FunTheme
 import com.funapp.android.services.favorites.DefaultFavoritesService
 import com.funapp.android.services.network.DefaultNetworkService
+import com.funapp.android.services.ai.DefaultAiService
 import com.funapp.android.services.search.DefaultSearchService
 
 class MainActivity : ComponentActivity() {
@@ -25,6 +26,7 @@ class MainActivity : ComponentActivity() {
     private val networkService by lazy { DefaultNetworkService(simulateErrors = appSettings.simulateErrorsEnabled) }
     private val favoritesService by lazy { DefaultFavoritesService(sharedPreferences) }
     private val searchService by lazy { DefaultSearchService(networkService) }
+    private val aiService by lazy { DefaultAiService(applicationContext) }
 
     private var pendingDeepLink by mutableStateOf<DeepLink?>(null)
 
@@ -38,6 +40,7 @@ class MainActivity : ComponentActivity() {
                     networkService = networkService,
                     favoritesService = favoritesService,
                     searchService = searchService,
+                    aiService = aiService,
                     appSettings = appSettings,
                     deepLink = pendingDeepLink,
                     onDeepLinkHandled = { pendingDeepLink = null }
@@ -49,5 +52,10 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         pendingDeepLink = DeepLink.parse(intent.data?.toString())
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        aiService.close()
     }
 }

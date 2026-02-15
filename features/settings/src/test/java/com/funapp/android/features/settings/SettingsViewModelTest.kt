@@ -20,6 +20,7 @@ class SettingsViewModelTest {
         assertEquals(AppearanceMode.SYSTEM, state.appearanceMode)
         assertTrue(state.featuredCarouselEnabled)
         assertFalse(state.simulateErrorsEnabled)
+        assertTrue(state.aiSummaryEnabled)
     }
 
     @Test
@@ -60,14 +61,25 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `toggle AI summary flag updates state`() {
+        val viewModel = createViewModel()
+
+        viewModel.onFeatureFlagToggle(FeatureFlag.AI_SUMMARY, false)
+
+        assertFalse(viewModel.state.value.aiSummaryEnabled)
+    }
+
+    @Test
     fun `reset feature toggles restores defaults`() {
         val viewModel = createViewModel()
         viewModel.onFeatureFlagToggle(FeatureFlag.FEATURED_CAROUSEL, false)
         viewModel.onFeatureFlagToggle(FeatureFlag.SIMULATE_ERRORS, true)
+        viewModel.onFeatureFlagToggle(FeatureFlag.AI_SUMMARY, false)
 
         viewModel.resetFeatureToggles()
 
         assertTrue(viewModel.state.value.featuredCarouselEnabled)
         assertFalse(viewModel.state.value.simulateErrorsEnabled)
+        assertTrue(viewModel.state.value.aiSummaryEnabled)
     }
 }

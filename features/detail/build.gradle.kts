@@ -31,6 +31,7 @@ dependencies {
     implementation(project(":platform:ui-components"))
     implementation(project(":services:network"))
     implementation(project(":services:favorites"))
+    implementation(project(":services:ai"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime)

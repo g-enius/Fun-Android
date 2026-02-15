@@ -32,6 +32,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.content.Intent
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import com.funapp.android.platform.ui.components.ErrorView
 import com.funapp.android.platform.ui.components.FavoriteButton
 import com.funapp.android.platform.ui.components.LoadingIndicator
@@ -71,7 +73,8 @@ internal fun DetailContent(
     state: DetailState,
     onBack: () -> Unit,
     onRefresh: () -> Unit,
-    onFavoriteToggle: () -> Unit
+    onFavoriteToggle: () -> Unit,
+    onGenerateSummary: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -173,6 +176,44 @@ internal fun DetailContent(
                     DescriptionContent(
                         description = state.detailedDescription ?: state.item.description
                     )
+
+                    // AI Summary section
+                    if (state.showAiSummary) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        HorizontalDivider()
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "AI Summary",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        when {
+                            state.isAiSummarizing -> {
+                                CircularProgressIndicator()
+                            }
+                            state.aiSummary != null -> {
+                                Text(
+                                    text = state.aiSummary,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            else -> {
+                                Button(onClick = onGenerateSummary) {
+                                    Text("Generate Summary")
+                                }
+                                if (state.aiSummaryError != null) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = state.aiSummaryError,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                        }
+                    }
 
                     // iOS equivalent callout
                     if (state.item.iosEquivalent != null) {

@@ -17,6 +17,7 @@ import com.funapp.android.features.profile.ProfileScreen
 import com.funapp.android.features.profiledetail.ProfileDetailScreen
 import com.funapp.android.model.DeepLink
 import com.funapp.android.platform.ui.AppSettings
+import com.funapp.android.services.ai.AiService
 import com.funapp.android.services.favorites.FavoritesService
 import com.funapp.android.services.network.NetworkService
 import com.funapp.android.services.search.SearchService
@@ -26,6 +27,7 @@ fun AppNavigation(
     networkService: NetworkService,
     favoritesService: FavoritesService,
     searchService: SearchService,
+    aiService: AiService,
     appSettings: AppSettings,
     deepLink: DeepLink? = null,
     onDeepLinkHandled: () -> Unit = {}
@@ -97,6 +99,8 @@ fun AppNavigation(
                 itemId = itemId,
                 networkService = networkService,
                 favoritesService = favoritesService,
+                aiService = aiService,
+                appSettings = appSettings,
                 onBack = { navController.popBackStack() }
             )
         }

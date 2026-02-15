@@ -49,6 +49,7 @@ dependencies {
     implementation(project(":services:network"))
     implementation(project(":services:favorites"))
     implementation(project(":services:search"))
+    implementation(project(":services:ai"))
     implementation(project(":features:home"))
     implementation(project(":features:search"))
     implementation(project(":features:items"))

@@ -15,6 +15,9 @@ class AppSettings {
     private val _simulateErrorsEnabled = MutableStateFlow(false)
     val simulateErrorsEnabled: StateFlow<Boolean> = _simulateErrorsEnabled.asStateFlow()
 
+    private val _aiSummaryEnabled = MutableStateFlow(true)
+    val aiSummaryEnabled: StateFlow<Boolean> = _aiSummaryEnabled.asStateFlow()
+
     fun setAppearanceMode(mode: AppearanceMode) {
         _appearanceMode.value = mode
     }
@@ -27,6 +30,10 @@ class AppSettings {
         _simulateErrorsEnabled.value = enabled
     }
 
+    fun setAiSummaryEnabled(enabled: Boolean) {
+        _aiSummaryEnabled.value = enabled
+    }
+
     fun resetAppearance() {
         _appearanceMode.value = AppearanceMode.SYSTEM
     }
@@ -34,5 +41,6 @@ class AppSettings {
     fun resetFeatureToggles() {
         _featuredCarouselEnabled.value = true
         _simulateErrorsEnabled.value = false
+        _aiSummaryEnabled.value = true
     }
 }

@@ -104,6 +104,14 @@ internal fun SettingsContent(
                     onCheckedChange = { onFeatureFlagToggle(FeatureFlag.SIMULATE_ERRORS, it) }
                 )
             }
+            item {
+                SettingRow(
+                    title = "AI Summary",
+                    description = "Enable on-device AI summarisation",
+                    checked = state.aiSummaryEnabled,
+                    onCheckedChange = { onFeatureFlagToggle(FeatureFlag.AI_SUMMARY, it) }
+                )
+            }
 
             // Reset section
             item {

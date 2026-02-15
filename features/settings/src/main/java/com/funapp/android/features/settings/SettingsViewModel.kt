@@ -17,7 +17,8 @@ class SettingsViewModel(
         SettingsState(
             appearanceMode = appSettings.appearanceMode.value,
             featuredCarouselEnabled = appSettings.featuredCarouselEnabled.value,
-            simulateErrorsEnabled = appSettings.simulateErrorsEnabled.value
+            simulateErrorsEnabled = appSettings.simulateErrorsEnabled.value,
+            aiSummaryEnabled = appSettings.aiSummaryEnabled.value
         )
     )
     val state: StateFlow<SettingsState> = _state.asStateFlow()
@@ -37,6 +38,10 @@ class SettingsViewModel(
                 _state.update { it.copy(simulateErrorsEnabled = enabled) }
                 appSettings.setSimulateErrorsEnabled(enabled)
             }
+            FeatureFlag.AI_SUMMARY -> {
+                _state.update { it.copy(aiSummaryEnabled = enabled) }
+                appSettings.setAiSummaryEnabled(enabled)
+            }
         }
     }
 
@@ -49,7 +54,8 @@ class SettingsViewModel(
         _state.update {
             it.copy(
                 featuredCarouselEnabled = true,
-                simulateErrorsEnabled = false
+                simulateErrorsEnabled = false,
+                aiSummaryEnabled = true
             )
         }
         appSettings.resetFeatureToggles()

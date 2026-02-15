@@ -3,6 +3,8 @@ package com.funapp.android.features.detail
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.funapp.android.model.TechnologyDescriptions
+import com.funapp.android.platform.ui.AppSettings
+import com.funapp.android.services.ai.AiService
 import com.funapp.android.services.favorites.FavoritesService
 import com.funapp.android.services.network.NetworkService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +16,9 @@ import kotlinx.coroutines.launch
 class DetailViewModel(
     private val itemId: String,
     private val networkService: NetworkService,
-    private val favoritesService: FavoritesService
+    private val favoritesService: FavoritesService,
+    private val aiService: AiService,
+    private val appSettings: AppSettings
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DetailState(isLoading = true))
@@ -23,6 +27,7 @@ class DetailViewModel(
     init {
         loadDetails()
         observeFavorites()
+        checkAiAvailability()
     }
 
     private fun loadDetails() {
@@ -33,21 +38,30 @@ class DetailViewModel(
                     val isFav = favoritesService.isFavorite(item.id)
                     val detailedDescription = TechnologyDescriptions.description(item.id)
                     _state.update {
-                        DetailState(
+                        it.copy(
                             isLoading = false,
                             item = item.copy(isFavorite = isFav),
-                            detailedDescription = detailedDescription
+                            detailedDescription = detailedDescription,
+                            error = null
                         )
                     }
                 }
                 .onFailure { error ->
                     _state.update {
-                        DetailState(
+                        it.copy(
                             isLoading = false,
                             error = error.message ?: "Unknown error"
                         )
                     }
                 }
+        }
+    }
+
+    private fun checkAiAvailability() {
+        viewModelScope.launch {
+            val enabled = appSettings.aiSummaryEnabled.value
+            val available = if (enabled) aiService.isAvailable() else false
+            _state.update { it.copy(showAiSummary = enabled && available) }
         }
     }
 
@@ -68,6 +82,27 @@ class DetailViewModel(
         viewModelScope.launch {
             val item = _state.value.item ?: return@launch
             favoritesService.toggleFavorite(item.id)
+        }
+    }
+
+    fun onGenerateSummary() {
+        val description = _state.value.detailedDescription
+            ?: _state.value.item?.description
+            ?: return
+        viewModelScope.launch {
+            _state.update { it.copy(isAiSummarizing = true, aiSummaryError = null) }
+            aiService.summarize(description)
+                .onSuccess { summary ->
+                    _state.update { it.copy(aiSummary = summary, isAiSummarizing = false) }
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            aiSummaryError = error.message ?: "Summarisation failed",
+                            isAiSummarizing = false
+                        )
+                    }
+                }
         }
     }
 
