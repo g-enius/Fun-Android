@@ -16,7 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,7 +40,7 @@ import com.funapp.android.platform.ui.components.LoadingIndicator
 internal fun ProfileContent(
     state: ProfileState,
     onRefresh: () -> Unit,
-    onSearchItems: () -> Unit,
+    onGoToItems: () -> Unit,
     onLogout: () -> Unit
 ) {
     Scaffold(
@@ -116,9 +116,9 @@ internal fun ProfileContent(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Search Items button
+                    // Go to Items button
                     Button(
-                        onClick = onSearchItems,
+                        onClick = onGoToItems,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                             contentColor = MaterialTheme.colorScheme.primary
@@ -134,7 +134,7 @@ internal fun ProfileContent(
                             modifier = Modifier.padding(vertical = 4.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Search,
+                                imageVector = Icons.Default.List,
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp)
                             )

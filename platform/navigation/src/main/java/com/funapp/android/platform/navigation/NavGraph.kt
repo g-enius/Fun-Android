@@ -108,7 +108,7 @@ fun AppNavigation(
         composable("profile") {
             ProfileScreen(
                 networkService = networkService,
-                onSearchItems = {
+                onGoToItems = {
                     selectedTab = 1
                     navController.popBackStack()
                 },
