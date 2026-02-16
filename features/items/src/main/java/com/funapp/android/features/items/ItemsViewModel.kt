@@ -52,7 +52,10 @@ class ItemsViewModel(
                     _state.update {
                         it.copy(
                             isLoading = false,
-                            error = error.message ?: "Unknown error"
+                            error = error.message ?: "Unknown error",
+                            allItems = emptyList(),
+                            filteredItems = emptyList(),
+                            allCategories = emptyList()
                         )
                     }
                 }

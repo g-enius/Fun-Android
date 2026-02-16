@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.funapp.android.model.Item
 import com.funapp.android.platform.ui.components.FavoriteButton
+import com.funapp.android.platform.ui.components.ErrorView
 import com.funapp.android.platform.ui.components.LoadingIndicator
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,6 +76,9 @@ internal fun SearchContent(
             when {
                 state.isLoading -> {
                     LoadingIndicator()
+                }
+                state.error != null -> {
+                    ErrorView(message = state.error)
                 }
                 state.query.isBlank() -> {
                     EmptySearchView()

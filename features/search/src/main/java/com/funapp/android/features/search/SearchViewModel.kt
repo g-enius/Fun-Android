@@ -41,11 +41,13 @@ class SearchViewModel(
                     if (query.isBlank()) {
                         flowOf(null)
                     } else {
-                        _state.update { it.copy(isLoading = true) }
+                        _state.update { it.copy(isLoading = true, error = null) }
                         searchService.search(query)
                     }
                 }
-                .catch { _state.update { it.copy(isLoading = false, results = emptyList()) } }
+                .catch { error ->
+                    _state.update { it.copy(isLoading = false, error = error.message ?: "Search failed") }
+                }
                 .collect { result ->
                     if (result == null) {
                         _state.update { it.copy(isLoading = false, results = emptyList()) }

@@ -13,8 +13,8 @@ class DefaultSearchService(
         val result = networkService.searchItems(query)
         result.onSuccess { searchResult ->
             emit(searchResult)
-        }.onFailure {
-            emit(SearchResult(query = query, results = emptyList(), totalCount = 0))
+        }.onFailure { error ->
+            throw error
         }
     }
 }
