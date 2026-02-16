@@ -46,8 +46,9 @@ Fun-Android/
 **Dependency Hierarchy:**
 ```
 app → navigation → features/* → services/* → model
-         └──────→ ui-components ──────────────┘
+                       └─────→ ui-components (no project deps)
 ```
+`app` and `navigation` both directly depend on all features, services, `ui-components`, and `model`. Features depend on the specific services they need plus `ui-components` and `model`. Services only depend on `model`.
 
 ## Key Patterns
 
