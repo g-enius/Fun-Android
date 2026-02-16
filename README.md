@@ -19,7 +19,7 @@ A modern Android application demonstrating clean architecture (MVVM), Jetpack Co
 | Reactive & Concurrency | Kotlin Coroutines, StateFlow |
 | Architecture | MVVM + Navigation Compose |
 | Dependency Injection | Manual (ViewModelFactory) |
-| Build System | Gradle 8.9, Version Catalog |
+| Build System | Gradle 8.13, Version Catalog |
 | Minimum SDK | API 26 (Android 8.0) |
 | Target SDK | API 35 (Android 15) |
 | Testing | JUnit 5, MockK, Turbine |
@@ -36,18 +36,20 @@ Fun-Android/
 ├── services/
 │   ├── network/                # Network service interface + mock implementation
 │   ├── favorites/              # Favorites service (SharedPreferences-backed)
-│   └── search/                 # Search service (delegates to network)
+│   ├── search/                 # Search service (delegates to network)
+│   └── ai/                     # AI summary service
 └── features/
+    ├── login/                  # Login screen
     ├── home/                   # Home tab (item list + favorites)
-    ├── search/                 # Search tab (debounced query)
-    ├── items/                  # Favorites tab (filtered items)
-    ├── profile/                # Profile tab (current user)
+    ├── search/                 # Search (debounced query)
+    ├── items/                  # Items tab (filtered items)
+    ├── profile/                # Profile screen (via top-bar icon)
     ├── profile-detail/         # Profile detail screen
     ├── detail/                 # Item detail screen
-    └── settings/               # Settings tab (feature flags)
+    └── settings/               # Settings tab (feature toggles)
 ```
 
-14 modules total. All modules except `app` are Android library modules.
+16 modules total. All modules except `app` are Android library modules.
 
 **Dependency Hierarchy:**
 ```
@@ -69,9 +71,10 @@ Services are created lazily in `MainActivity` and passed through the composable 
 
 ```kotlin
 // MainActivity.kt
-private val networkService by lazy { DefaultNetworkService() }
+private val networkService by lazy { DefaultNetworkService(simulateErrors = appSettings.simulateErrorsEnabled) }
 private val favoritesService by lazy { DefaultFavoritesService(sharedPreferences) }
 private val searchService by lazy { DefaultSearchService(networkService) }
+private val aiService by lazy { DefaultAiService() }
 ```
 
 ### Screen/Content Split
@@ -107,8 +110,8 @@ _state.update { current ->
 - **3-Tab Navigation**: Home, Items, Settings (Profile via top-bar icon)
 - **Detail Screens**: Item detail with favorite toggle, profile detail with back navigation
 - **Reactive Favorites**: SharedPreferences-backed, observed via StateFlow across all screens
-- **Debounced Search**: 300ms debounce with `distinctUntilChanged` and `flatMapLatest`
-- **Feature Flags**: Runtime toggles in Settings (UI-only for demo)
+- **Feature Toggles**: Runtime flags that control app behavior (featured carousel, error simulation, AI summary)
+- **AI Summary**: On-device summarisation on item detail screen
 - **Material 3 Theming**: Dynamic color support, light/dark mode
 - **Error Handling**: Loading/error/content states with retry support
 - **Pull-to-Refresh**: On applicable screens
@@ -128,7 +131,7 @@ NavHost
 ## Testing
 
 - **Unit Tests**: JUnit 5 + MockK + Coroutines Test
-- **12 tests** across 3 ViewModels (Home, Detail, Settings)
+- **53 tests** across 7 ViewModels
 - **Coroutine testing**: `StandardTestDispatcher` + `advanceUntilIdle`
 
 ```bash
@@ -167,7 +170,7 @@ cd Fun-Android
 This project demonstrates **AI-assisted Android development** using Claude Code.
 
 Architecture and patterns designed by developer. Claude assisted with:
-- Full project scaffolding (14 modules)
+- Full project scaffolding (16 modules)
 - Feature implementation
 - Code review (5-agent parallel review)
 - Bug fixes (atomic StateFlow, nav safety, padding)
