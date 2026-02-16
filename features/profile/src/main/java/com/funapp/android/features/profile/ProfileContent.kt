@@ -139,7 +139,7 @@ internal fun ProfileContent(
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.size(8.dp))
-                            Text("Search Items")
+                            Text("Go to Items")
                         }
                     }
 
