@@ -4,6 +4,12 @@
 
 A modern Android application demonstrating clean architecture (MVVM), Jetpack Compose, multi-module design, and best practices for scalable Android development. Android counterpart of the [Fun iOS app](https://github.com/g-enius/Fun-iOS).
 
+## Screenshots
+
+| Home | Detail | Profile | Settings |
+|------|--------|---------|----------|
+| ![Home](assets/screenshot-home.jpg) | ![Detail](assets/screenshot-detail.jpg) | ![Profile](assets/screenshot-profile.jpg) | ![Settings](assets/screenshot-settings.jpg) |
+
 ## Tech Stack
 
 | Category | Technology |
@@ -46,9 +52,8 @@ Fun-Android/
 **Dependency Hierarchy:**
 ```
 app → navigation → features/* → services/* → model
-                       └─────→ ui-components (no project deps)
+         └──────→ ui-components ──────────────┘
 ```
-`app` and `navigation` both directly depend on all features, services, `ui-components`, and `model`. Features depend on the specific services they need plus `ui-components` and `model`. Services only depend on `model`.
 
 ## Key Patterns
 
@@ -99,7 +104,7 @@ _state.update { current ->
 
 ## Features
 
-- **5-Tab Navigation**: Home, Search, Favorites, Profile, Settings
+- **3-Tab Navigation**: Home, Items, Settings (Profile via top-bar icon)
 - **Detail Screens**: Item detail with favorite toggle, profile detail with back navigation
 - **Reactive Favorites**: SharedPreferences-backed, observed via StateFlow across all screens
 - **Debounced Search**: 300ms debounce with `distinctUntilChanged` and `flatMapLatest`
@@ -112,12 +117,10 @@ _state.update { current ->
 
 ```
 NavHost
-├── "main" → MainTabScreen (5 tabs)
-│   ├── Tab 0: HomeScreen
-│   ├── Tab 1: SearchScreen
-│   ├── Tab 2: ItemsScreen (Favorites)
-│   ├── Tab 3: ProfileScreen
-│   └── Tab 4: SettingsScreen
+├── "main" → MainTabScreen (3 tabs)
+│   ├── Tab 0: HomeScreen (profile icon → ProfileScreen)
+│   ├── Tab 1: ItemsScreen
+│   └── Tab 2: SettingsScreen
 ├── "detail/{itemId}" → DetailScreen
 └── "profile/{userId}" → ProfileDetailScreen
 ```
